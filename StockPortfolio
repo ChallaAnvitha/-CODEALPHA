@@ -1,0 +1,57 @@
+import requests
+
+class StockPortfolio:
+    def __init__(self):
+        self.stocks = {}
+
+    def add_stock(self, symbol, quantity):
+        if symbol in self.stocks:
+            self.stocks[symbol] += quantity
+        else:
+            self.stocks[symbol] = quantity
+
+    def remove_stock(self, symbol, quantity):
+        if symbol in self.stocks:
+            if self.stocks[symbol] >= quantity:
+                self.stocks[symbol] -= quantity
+                if self.stocks[symbol] == 0:
+                    del self.stocks[symbol]
+                return True
+            else:
+                print("Insufficient quantity to remove.")
+                return False
+        else:
+            print("Stock not found in portfolio.")
+            return False
+
+    def get_portfolio_value(self):
+        total_value = 0
+        for symbol, quantity in self.stocks.items():
+            price = self.get_stock_price(symbol)
+            if price is not None:
+                total_value += price * quantity
+        return total_value
+
+    def get_stock_price(self, symbol):
+        url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol}&apikey=YOUR_API_KEY"
+        try:
+            response = requests.get(url)
+            data = response.json()
+            return float(data["Global Quote"]["05. price"])
+        except Exception as e:
+            print(f"Error fetching stock price for {symbol}: {e}")
+            return None
+
+# Example usage:
+portfolio = StockPortfolio()
+portfolio.add_stock("AAPL", 10)
+portfolio.add_stock("GOOGL", 5)
+portfolio.remove_stock("AAPL", 3)
+portfolio.add_stock("MSFT", 7)
+
+print("Portfolio stocks:")
+for symbol, quantity in portfolio.stocks.items():
+    print(f"{symbol}: {quantity}")
+
+portfolio_value = portfolio.get_portfolio_value()
+print(f"Total portfolio value: ${portfolio_value:.2f}")
